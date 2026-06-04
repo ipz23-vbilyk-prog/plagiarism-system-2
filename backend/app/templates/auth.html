@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Auth</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .box {
+            width: 380px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 15px;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #2d6cdf;
+            color: white;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #1f4fb3;
+        }
+
+        .switch {
+            text-align: center;
+            margin-top: 15px;
+            cursor: pointer;
+            color: #2d6cdf;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .msg {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="box">
+
+    <!-- LOGIN -->
+    <div id="loginBox">
+        <h2>Вхід</h2>
+
+        <input id="loginEmail" placeholder="Email">
+        <input id="loginPassword" type="password" placeholder="Пароль">
+
+        <button onclick="login()">Увійти</button>
+
+        <div class="switch" onclick="toggle()">Немає акаунта? Реєстрація</div>
+        <div class="msg" id="loginMsg"></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="registerBox" class="hidden">
+        <h2>Реєстрація</h2>
+
+        <input id="regEmail" placeholder="Email">
+        <input id="regPassword" type="password" placeholder="Пароль">
+
+        <button onclick="register()">Створити акаунт</button>
+
+        <div class="switch" onclick="toggle()">Вже є акаунт? Вхід</div>
+        <div class="msg" id="regMsg"></div>
+    </div>
+
+</div>
+
+<script>
+
+function toggle() {
+    document.getElementById("loginBox").classList.toggle("hidden")
+    document.getElementById("registerBox").classList.toggle("hidden")
+}
+
+
+// ---------------- LOGIN ----------------
+async function login() {
+
+    const email = document.getElementById("loginEmail").value
+    const password = document.getElementById("loginPassword").value
+
+    const res = await fetch("/auth/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({email, password})
+    })
+
+    const data = await res.json()
+
+    if (res.ok) {
+        localStorage.setItem("token", data.access_token)
+        window.location.href = "/"
+    } else {
+        document.getElementById("loginMsg").innerText = data.detail || "Error"
+    }
+}
+
+
+// ---------------- REGISTER ----------------
+async function register() {
+
+    const email = document.getElementById("regEmail").value
+    const password = document.getElementById("regPassword").value
+
+    const res = await fetch("/auth/register", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({email, password})
+    })
+
+    const data = await res.json()
+
+    if (res.ok) {
+        document.getElementById("regMsg").innerText = "Акаунт створено! Тепер увійдіть."
+    } else {
+        document.getElementById("regMsg").innerText = data.detail || "Error"
+    }
+}
+
+</script>
+
+</body>
+</html>

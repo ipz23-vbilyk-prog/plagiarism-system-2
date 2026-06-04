@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Plagiarism Checker</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial, sans-serif;
+    background:#f1f5f9;
+    display:flex;
+    color:#111827;
+}
+
+/* SIDEBAR */
+
+.sidebar{
+    width:240px;
+    height:100vh;
+    background:#0f172a;
+    padding:30px 20px;
+    position:fixed;
+    left:0;
+    top:0;
+}
+
+.sidebar h2{
+    color:white;
+    margin-bottom:40px;
+    font-size:28px;
+}
+
+.sidebar a{
+    display:block;
+    color:#cbd5e1;
+    text-decoration:none;
+    padding:12px 14px;
+    border-radius:10px;
+    margin-bottom:10px;
+    transition:0.2s;
+}
+
+.sidebar a:hover{
+    background:#1e293b;
+    color:white;
+}
+
+/* MAIN */
+
+.main{
+    margin-left:240px;
+    width:100%;
+    padding:40px;
+}
+
+.page-title{
+    font-size:42px;
+    font-weight:bold;
+    margin-bottom:30px;
+}
+
+/* CARD */
+
+.card{
+    background:white;
+    border-radius:18px;
+    padding:30px;
+    margin-bottom:30px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.05);
+}
+
+/* UPLOAD */
+
+.upload-box{
+    border:2px dashed #cbd5e1;
+    border-radius:16px;
+    padding:50px;
+    text-align:center;
+    transition:0.2s;
+}
+
+.upload-box:hover{
+    border-color:#3b82f6;
+    background:#f8fafc;
+}
+
+.upload-title{
+    font-size:24px;
+    margin-bottom:15px;
+}
+
+.upload-sub{
+    color:#64748b;
+    margin-bottom:20px;
+}
+
+input[type=file]{
+    margin:20px 0;
+    font-size:16px;
+}
+
+button{
+    background:#111827;
+    color:white;
+    border:none;
+    padding:14px 24px;
+    border-radius:12px;
+    font-size:16px;
+    cursor:pointer;
+    transition:0.2s;
+}
+
+button:hover{
+    background:#1e293b;
+}
+
+/* RESULT */
+
+.result-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:20px;
+    margin-top:20px;
+}
+
+.stat-card{
+    background:#f8fafc;
+    padding:20px;
+    border-radius:16px;
+}
+
+.stat-title{
+    color:#64748b;
+    margin-bottom:10px;
+}
+
+.stat-value{
+    font-size:30px;
+    font-weight:bold;
+}
+
+/* BADGES */
+
+.badge{
+    padding:8px 14px;
+    border-radius:10px;
+    color:white;
+    font-weight:bold;
+    display:inline-block;
+}
+
+.low{
+    background:#22c55e;
+}
+
+.medium{
+    background:#f59e0b;
+}
+
+.high{
+    background:#ef4444;
+}
+
+/* MATCHES */
+
+.matches{
+    margin-top:30px;
+}
+
+.match-item{
+    background:#fff1f2;
+    border-left:5px solid #ef4444;
+    padding:20px;
+    border-radius:12px;
+    margin-bottom:15px;
+}
+
+.match-percent{
+    color:#ef4444;
+    font-weight:bold;
+    margin-bottom:10px;
+}
+
+/* CHART */
+
+.chart-box{
+    width:350px;
+    height:350px;
+    margin-top:20px;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:900px){
+
+    .sidebar{
+        width:100%;
+        height:auto;
+        position:relative;
+    }
+
+    .main{
+        margin-left:0;
+    }
+
+    .result-grid{
+        grid-template-columns:1fr;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+
+    <h2>User Panel</h2>
+
+    <a href="/dashboard">Files</a>
+    <a href="/check">Check text</a>
+    <a href="#" onclick="logout()">Logout</a>
+
+</div>
+
+<div class="main">
+
+    <h1 class="page-title">Plagiarism Checker</h1>
+
+    <div class="card">
+
+        <div class="upload-box">
+
+            <div class="upload-title">
+                Drag & drop file here
+            </div>
+
+            <div class="upload-sub">
+                or click to select
+            </div>
+
+            <input type="file" id="file">
+
+            <br>
+
+            <button onclick="checkFile()">
+                Check file
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="card">
+
+        <h2>Result</h2>
+
+        <div class="result-grid">
+
+            <div class="stat-card">
+                <div class="stat-title">
+                    Similarity
+                </div>
+
+                <div class="stat-value" id="similarityValue">
+                    0%
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">
+                    Level
+                </div>
+
+                <div class="stat-value">
+                    <span id="levelBadge" class="badge low">
+                        low
+                    </span>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">
+                    File
+                </div>
+
+                <div class="stat-value" id="fileName">
+                    ---
+                </div>
+            </div>
+
+        </div>
+
+        <div class="matches" id="matches">
+
+        </div>
+
+        <div class="chart-box">
+            <canvas id="chart" width="350" height="350"></canvas>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const token = localStorage.getItem("token");
+
+if (!token){
+    window.location.href = "/login";
+}
+
+let chart = null;
+
+async function checkFile(){
+
+    const fileInput = document.getElementById("file");
+
+    if(!fileInput.files.length){
+        alert("Choose file");
+        return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("file", fileInput.files[0]);
+
+    try{
+
+        const res = await fetch("/documents/upload",{
+            method:"POST",
+            headers:{
+                "Authorization":"Bearer " + token
+            },
+            body:formData
+        });
+
+        if(res.status === 401){
+
+            localStorage.removeItem("token");
+
+            window.location.href = "/login";
+
+            return;
+        }
+
+        const data = await res.json();
+
+        console.log(data);
+
+        const similarity = data.max_similarity
+            ? (data.max_similarity * 100).toFixed(2)
+            : "0.00";
+
+        const level = data.level || "low";
+
+        document.getElementById("similarityValue").innerText =
+            similarity + "%";
+
+        document.getElementById("fileName").innerText =
+            data.filename || "---";
+
+        const badge = document.getElementById("levelBadge");
+
+        badge.innerText = level;
+
+        badge.className = "badge " + level;
+
+        /* MATCHES */
+
+        const matches = document.getElementById("matches");
+
+        matches.innerHTML = "<h2>Matches</h2><br>";
+
+        if(data.matches && data.matches.length){
+
+            data.matches.forEach(match => {
+
+                matches.innerHTML += `
+                    <div class="match-item">
+
+                        <div class="match-percent">
+                            ${match.source || "database_document"}
+                            |
+                            ${match.similarity || "0"}%
+                        </div>
+
+                        <div>
+                            ${match.text || ""}
+                        </div>
+
+                    </div>
+                `;
+            });
+
+        }else{
+
+            matches.innerHTML += `
+                <p>No matches found</p>
+            `;
+        }
+
+        /* CHART */
+
+        const ctx = document.getElementById("chart");
+
+        if(chart){
+            chart.destroy();
+        }
+
+        chart = new Chart(ctx, {
+            type: "pie",
+            data: {
+                labels: ["Plagiarism", "Original"],
+                datasets: [{
+                    data: [
+                        parseFloat(similarity),
+                        100 - parseFloat(similarity)
+                    ],
+                    backgroundColor: [
+                        "#ef4444",
+                        "#22c55e"
+                    ]
+                }]
+            },
+            options:{
+                responsive:false
+            }
+        });
+
+    }catch(err){
+
+        console.error(err);
+
+        alert("Upload error");
+    }
+}
+
+function logout(){
+
+    localStorage.removeItem("token");
+
+    window.location.href = "/login";
+}
+
+</script>
+
+</body>
+</html>

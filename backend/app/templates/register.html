@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>Реєстрація</title>
+
+    <style>
+
+        *{
+            margin:0;
+            padding:0;
+            box-sizing:border-box;
+        }
+
+        body{
+
+            background:#eef2f7;
+
+            font-family:Arial;
+
+            display:flex;
+
+            justify-content:center;
+
+            align-items:center;
+
+            height:100vh;
+        }
+
+        .register-box{
+
+            width:420px;
+
+            background:white;
+
+            padding:40px;
+
+            border-radius:20px;
+
+            box-shadow:0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        h1{
+
+            font-size:52px;
+
+            margin-bottom:30px;
+        }
+
+        input{
+
+            width:100%;
+
+            height:55px;
+
+            margin-bottom:20px;
+
+            border-radius:12px;
+
+            border:1px solid #c9d3e3;
+
+            background:#eaf1fb;
+
+            padding-left:15px;
+
+            font-size:16px;
+        }
+
+        button{
+
+            width:100%;
+
+            height:55px;
+
+            border:none;
+
+            border-radius:12px;
+
+            background:#081330;
+
+            color:white;
+
+            font-size:22px;
+
+            cursor:pointer;
+        }
+
+        button:hover{
+
+            background:#10214f;
+        }
+
+        .message{
+
+            margin-top:20px;
+
+            text-align:center;
+
+            font-size:16px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div class="register-box">
+
+        <h1>Реєстрація</h1>
+
+        <input
+            type="email"
+            id="email"
+            placeholder="Email"
+        >
+
+        <input
+            type="password"
+            id="password"
+            placeholder="Пароль"
+        >
+
+        <button onclick="register()">
+            Зареєструватися
+        </button>
+
+        <div
+            id="message"
+            class="message"
+        ></div>
+
+    </div>
+
+    <script>
+
+        async function register(){
+
+            const email =
+                document.getElementById("email").value;
+
+            const password =
+                document.getElementById("password").value;
+
+            const message =
+                document.getElementById("message");
+
+            message.innerText = "";
+
+            try{
+
+                const response = await fetch(
+
+                    "/auth/register",
+
+                    {
+
+                        method:"POST",
+
+                        headers:{
+                            "Content-Type":"application/json"
+                        },
+
+                        body:JSON.stringify({
+
+                            email:email,
+                            password:password
+
+                        })
+
+                    }
+
+                );
+
+                const data = await response.json();
+
+                if(response.ok){
+
+                    // УДАЛЯЕМ СТАРЫЙ TOKEN
+                    localStorage.removeItem("token");
+
+                    message.style.color = "green";
+
+                    message.innerText =
+                        "Реєстрація успішна";
+
+                    // ПЕРЕХОД НА LOGIN
+                    setTimeout(()=>{
+
+                        window.location.href =
+                            "/login";
+
+                    }, 1000);
+                }
+
+                else{
+
+                    message.style.color = "red";
+
+                    message.innerText =
+                        data.detail || "Помилка";
+                }
+
+            }
+
+            catch(err){
+
+                message.style.color = "red";
+
+                message.innerText =
+                    "Сервер недоступний";
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>

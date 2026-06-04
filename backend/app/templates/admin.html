@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    color: #111;
+}
+
+/* SIDEBAR */
+.sidebar {
+    width: 230px;
+    height: 100vh;
+    background: #0f172a;
+    color: white;
+    position: fixed;
+    padding: 20px;
+}
+
+.sidebar h2 { margin-bottom: 20px; }
+
+.sidebar a {
+    display: block;
+    color: #cbd5e1;
+    text-decoration: none;
+    margin: 10px 0;
+}
+
+/* MAIN */
+.main {
+    margin-left: 250px;
+    padding: 25px;
+}
+
+.cards {
+    display: flex;
+    gap: 15px;
+}
+
+.card {
+    background: white;
+    padding: 18px;
+    border-radius: 12px;
+    flex: 1;
+}
+
+table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+    background: white;
+}
+
+th, td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.badge {
+    padding: 5px 10px;
+    border-radius: 6px;
+    color: white;
+}
+
+.low { background: #22c55e; }
+.medium { background: #f59e0b; }
+.high { background: #ef4444; }
+
+button {
+    padding: 6px 10px;
+    background: black;
+    color: white;
+    border: none;
+    border-radius: 6px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>Admin Panel</h2>
+    <a href="/admin/files">Files</a>
+    <a href="/admin/statistics">Statistics</a>
+    <a href="/check">Check text</a>
+    <a href="#" onclick="logout()">Logout</a>
+</div>
+
+<div class="main">
+
+<h1>Dashboard</h1>
+
+<div class="cards">
+    <div class="card">
+        <h3 id="totalDocs">0</h3>
+        <p>Total documents</p>
+    </div>
+
+    <div class="card">
+        <h3 id="highRisk">0</h3>
+        <p>High plagiarism</p>
+    </div>
+</div>
+
+<div style="background:white; padding:20px; border-radius:12px; margin-top:20px;">
+    <canvas id="plagChart"></canvas>
+</div>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>File</th>
+<th>Similarity</th>
+<th>Level</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="docsTable"></tbody>
+</table>
+
+</div>
+
+<script>
+
+const token = localStorage.getItem("token");
+
+if (!token) window.location.href = "/login";
+
+async function loadDocs() {
+    const res = await fetch("/documents/history", {
+        headers: { "Authorization": "Bearer " + token }
+    });
+
+    const data = await res.json();
+
+    let low = 0, medium = 0, high = 0;
+
+    const table = document.getElementById("docsTable");
+    table.innerHTML = "";
+
+    data.forEach(doc => {
+
+        if (doc.level === "low") low++;
+        if (doc.level === "medium") medium++;
+        if (doc.level === "high") high++;
+
+        table.innerHTML += `
+            <tr>
+                <td>${doc.id}</td>
+                <td>${doc.filename}</td>
+                <td>${(doc.max_similarity * 100).toFixed(2)}%</td>
+                <td><span class="badge ${doc.level}">${doc.level}</span></td>
+                <td><button onclick="downloadReport(${doc.id})">Report</button></td>
+            </tr>
+        `;
+    });
+
+    document.getElementById("totalDocs").innerText = data.length;
+    document.getElementById("highRisk").innerText = high;
+
+    drawChart(low, medium, high);
+}
+
+function drawChart(low, medium, high) {
+    new Chart(document.getElementById("plagChart"), {
+        type: "pie",
+        data: {
+            labels: ["Low", "Medium", "High"],
+            datasets: [{
+                data: [low, medium, high],
+                backgroundColor: ["#22c55e", "#f59e0b", "#ef4444"]
+            }]
+        }
+    });
+}
+
+function downloadReport(id) {
+    window.open(`/documents/report/${id}`);
+}
+
+function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+}
+
+loadDocs();
+
+</script>
+
+</body>
+</html>
