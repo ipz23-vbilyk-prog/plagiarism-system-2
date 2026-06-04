@@ -1,0 +1,12 @@
+uploads/
+reports/
+venv/
+
+*.pdf
+*.docx
+
+documents.json
+plagiarism.db
+
+__pycache__/
+*.pyc
