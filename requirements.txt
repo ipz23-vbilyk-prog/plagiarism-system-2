@@ -6,3 +6,4 @@ jinja2
 reportlab
 python-docx
 scikit-learn
+pydyf
